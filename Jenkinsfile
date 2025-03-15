@@ -1,34 +1,83 @@
-pipeline{
-    agent { label 'dev-server' }
-    
-    stages{
-        stage("Code Clone"){
+@Library("shared_lib") _
+pipeline {
+    agent {label "likhith"}
+
+    stages {
+        stage('hello'){
             steps{
-                echo "Code Clone Stage"
-                git url: "https://github.com/LondheShubham153/node-todo-cicd.git", branch: "master"
-            }
-        }
-        stage("Code Build & Test"){
-            steps{
-                echo "Code Build Stage"
-                sh "docker build -t node-app ."
-            }
-        }
-        stage("Push To DockerHub"){
-            steps{
-                withCredentials([usernamePassword(
-                    credentialsId:"dockerHubCreds",
-                    usernameVariable:"dockerHubUser", 
-                    passwordVariable:"dockerHubPass")]){
-                sh 'echo $dockerHubPass | docker login -u $dockerHubUser --password-stdin'
-                sh "docker image tag node-app:latest ${env.dockerHubUser}/node-app:latest"
-                sh "docker push ${env.dockerHubUser}/node-app:latest"
+                script{
+                    hello()
                 }
             }
         }
-        stage("Deploy"){
+        stage('Code') {
+            steps {
+                script{
+                     cloning("https://github.com/LikhithSM/node-todo-cicd.git","master")
+                }
+            }
+        }
+        stage('Build') {
+            steps {
+                script{
+                    build("my-notes","latest","likhithsm")   
+                }
+            }
+        }
+        stage('Push to docker hub') {
+            steps {
+                script{
+                    push('my-notes','latest')
+                }
+            }
+        }
+        stage('Deploy') {
+            steps {
+                echo 'Deploying the code'
+                //sh 'docker run -d -p 8000:8000 my-notes:latest'
+                sh 'docker compose up -d'
+            }
+        }
+    }
+}
+@Library("shared_lib") _
+pipeline {
+    agent {label "likhith"}
+
+    stages {
+        stage('hello'){
             steps{
-                sh "docker compose down && docker compose up -d --build"
+                script{
+                    hello()
+                }
+            }
+        }
+        stage('Code') {
+            steps {
+                script{
+                     cloning("https://github.com/LikhithSM/node-todo-cicd.git","master")
+                }
+            }
+        }
+        stage('Build') {
+            steps {
+                script{
+                    build("my-notes","latest","likhithsm")   
+                }
+            }
+        }
+        stage('Push to docker hub') {
+            steps {
+                script{
+                    push('my-notes','latest')
+                }
+            }
+        }
+        stage('Deploy') {
+            steps {
+                echo 'Deploying the code'
+                //sh 'docker run -d -p 8000:8000 my-notes:latest'
+                sh 'docker compose up -d'
             }
         }
     }
